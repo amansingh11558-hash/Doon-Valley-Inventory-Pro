@@ -1,7 +1,10 @@
 
 import React, { useState, useEffect, useRef } from 'react';
-/* Added ShoppingCart to the lucide-react imports */
-import { Plus, Search, Trash2, Calendar, FileText, X, Edit2, IndianRupee, Tag, CheckCircle, Printer, ArrowLeft, Wallet, TrendingUp, HandCoins, AlertCircle, Package, ShoppingCart } from 'lucide-react';
+import { 
+  Plus, Search, Trash2, Calendar, FileText, X, Edit2, 
+  IndianRupee, Tag, CheckCircle, Printer, ArrowLeft, 
+  Wallet, TrendingUp, HandCoins, AlertCircle, Package, ShoppingCart 
+} from 'lucide-react';
 import { SalesBill, IssuedToType, PaymentMode, PaymentStatus, Item } from '../types';
 
 const SalesBilling: React.FC<{ store: any }> = ({ store }) => {
@@ -28,24 +31,21 @@ const SalesBilling: React.FC<{ store: any }> = ({ store }) => {
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
 
-  // Dashboard-style counters
-  const totalInvoicedSum = store.salesBills.reduce((sum: number, b: any) => sum + b.finalAmount, 0);
-  const totalReceivedSum = store.salesBills.reduce((sum: number, b: any) => sum + b.paidAmount, 0);
-  const totalBalanceSum = totalInvoicedSum - totalReceivedSum;
-
-  // Real-time reactive calculations for the MODAL
+  // Real-time calculation for the active modal
   const totalBillRaw = items.reduce((sum, it) => sum + (Number(it.total) || 0), 0);
   const finalBillAmount = Math.max(0, totalBillRaw - Number(discount));
   const currentBalanceDue = Math.max(0, finalBillAmount - Number(paidAmount));
 
   const calculatePaymentStatus = (paid: number, total: number): PaymentStatus => {
     if (total === 0) return 'Unpaid';
-    if (paid >= total) return 'Paid';
-    if (paid > 0) return 'Partial';
+    const p = Number(paid);
+    const t = Number(total);
+    if (p >= t) return 'Paid';
+    if (p > 0) return 'Partial';
     return 'Unpaid';
   };
 
-  const currentStatusAuto = calculatePaymentStatus(Number(paidAmount), finalBillAmount);
+  const currentStatusAuto = calculatePaymentStatus(paidAmount, finalBillAmount);
 
   const handleAddNewItemRow = () => {
     setItems([...items, { itemId: '', itemName: '', quantity: 1, rate: 0, total: 0 }]);
@@ -138,11 +138,11 @@ const SalesBilling: React.FC<{ store: any }> = ({ store }) => {
 
   if (printingBill) {
     return (
-      <div className="bg-white p-12 max-w-4xl mx-auto shadow-2xl rounded-[40px] min-h-[90vh] flex flex-col border border-slate-200">
+      <div className="bg-white p-12 max-w-4xl mx-auto shadow-2xl rounded-[40px] min-h-[90vh] flex flex-col border border-slate-200 print:shadow-none print:border-none print:p-0">
         <div className="flex justify-between items-start mb-12 print:hidden">
           <button onClick={() => setPrintingBill(null)} className="flex items-center space-x-2 text-slate-500 hover:text-slate-900 transition-all bg-slate-100 px-5 py-2.5 rounded-2xl font-bold">
             <ArrowLeft size={18} />
-            <span>Back to Inventory</span>
+            <span>Back to Records</span>
           </button>
           <button onClick={() => window.print()} className="flex items-center space-x-2 bg-emerald-600 text-white px-8 py-2.5 rounded-2xl font-bold shadow-xl hover:bg-emerald-700 transition-all">
             <Printer size={18} />
@@ -152,19 +152,19 @@ const SalesBilling: React.FC<{ store: any }> = ({ store }) => {
         
         <div className="flex justify-between items-start border-b-8 border-slate-900 pb-10 mb-10">
            <div>
-              <h1 className="text-6xl font-black text-slate-900 uppercase italic leading-tight">Bill</h1>
-              <p className="text-slate-500 font-black mt-2 tracking-[0.2em] text-sm font-mono">NO: {printingBill.invoiceNo}</p>
+              <h1 className="text-6xl font-black text-slate-900 uppercase italic leading-tight">Invoice</h1>
+              <p className="text-slate-500 font-black mt-2 tracking-[0.2em] text-sm font-mono">BILL NO: {printingBill.invoiceNo}</p>
            </div>
            <div className="text-right">
               <p className="font-black text-3xl text-slate-900">Doon Valley High School</p>
-              <p className="text-[10px] text-slate-500 font-bold uppercase tracking-widest mt-1">Authorized Inventory Disbursement</p>
+              <p className="text-[10px] text-slate-500 font-bold uppercase tracking-widest mt-1">Institutional Inventory Receipt</p>
               <p className="text-xs text-slate-900 font-black mt-4 uppercase">Date: {new Date(printingBill.date).toLocaleDateString()}</p>
            </div>
         </div>
 
         <div className="grid grid-cols-2 gap-16 mb-16">
            <div className="bg-slate-50 p-8 rounded-[32px] border-2 border-slate-100 shadow-inner">
-              <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-4">Recipient Detail</p>
+              <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-4">Issued To Information</p>
               <h4 className="text-3xl font-black text-slate-900">{printingBill.issuedTo}</h4>
               <div className="flex items-center space-x-2 mt-3">
                  <span className="px-3 py-1 bg-emerald-600 text-white text-[10px] font-black uppercase rounded-full shadow-sm">{printingBill.issuedToType}</span>
@@ -173,7 +173,7 @@ const SalesBilling: React.FC<{ store: any }> = ({ store }) => {
            </div>
            <div className="flex flex-col justify-center text-right space-y-4">
               <div className="space-y-1">
-                 <p className="text-slate-400 font-black uppercase text-[10px] tracking-widest">Transaction Status</p>
+                 <p className="text-slate-400 font-black uppercase text-[10px] tracking-widest">Payment Status</p>
                  <span className={`px-6 py-2 rounded-2xl text-xl font-black uppercase inline-block border-4 ${printingBill.paymentStatus === 'Paid' ? 'bg-emerald-50 border-emerald-500 text-emerald-600' : 'bg-rose-50 border-rose-500 text-rose-600'}`}>
                    {printingBill.paymentStatus}
                  </span>
@@ -185,10 +185,10 @@ const SalesBilling: React.FC<{ store: any }> = ({ store }) => {
         <table className="w-full text-left border-collapse mb-auto">
            <thead>
               <tr className="border-b-4 border-slate-900 text-[11px] uppercase font-black text-slate-500">
-                 <th className="py-6 w-3/5">Inventory Detail</th>
+                 <th className="py-6 w-3/5">Item Details</th>
                  <th className="py-6 text-center">Qty</th>
-                 <th className="py-6 text-right">Unit Rate</th>
-                 <th className="py-6 text-right">Amount</th>
+                 <th className="py-6 text-right">Unit Price</th>
+                 <th className="py-6 text-right">Total</th>
               </tr>
            </thead>
            <tbody className="divide-y-2 divide-slate-100">
@@ -209,11 +209,12 @@ const SalesBilling: React.FC<{ store: any }> = ({ store }) => {
            </tbody>
         </table>
 
+        {/* ARRANGED AMOUNT SECTION */}
         <div className="mt-20 border-t-8 border-slate-900 pt-12 flex justify-between items-end">
            <div className="max-w-xs space-y-6">
               <div>
-                 <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">Remarks</p>
-                 <p className="text-sm text-slate-600 italic font-medium leading-relaxed bg-slate-50 p-4 rounded-2xl border border-slate-100">{printingBill.remarks || 'Standard item distribution.'}</p>
+                 <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">Remarks / Memo</p>
+                 <p className="text-sm text-slate-600 italic font-medium leading-relaxed bg-slate-50 p-4 rounded-2xl border border-slate-100">{printingBill.remarks || 'No additional remarks provided.'}</p>
               </div>
               <div className="pt-10">
                  <div className="w-48 border-b-2 border-slate-400 mb-2"></div>
@@ -222,29 +223,29 @@ const SalesBilling: React.FC<{ store: any }> = ({ store }) => {
            </div>
            <div className="w-96 space-y-5">
               <div className="flex justify-between items-center text-slate-500 font-black uppercase text-xs tracking-widest px-4">
-                 <span>Items Subtotal</span>
+                 <span>Subtotal Amount</span>
                  <span className="font-mono text-lg">₹{printingBill.totalAmount.toLocaleString()}</span>
               </div>
               <div className="flex justify-between items-center text-rose-500 font-black uppercase text-xs tracking-widest px-4">
-                 <span>Discount Given</span>
+                 <span>Less: Discount</span>
                  <span className="font-mono text-lg">- ₹{printingBill.discount.toLocaleString()}</span>
               </div>
               <div className="h-0.5 bg-slate-200 mx-4"></div>
               <div className="flex justify-between items-center bg-slate-900 text-white p-6 rounded-[28px] shadow-2xl">
-                 <span className="text-sm font-black uppercase tracking-widest">Final Total</span>
+                 <span className="text-sm font-black uppercase tracking-widest">Net Payable</span>
                  <span className="text-4xl font-black font-mono">₹{printingBill.finalAmount.toLocaleString()}</span>
               </div>
               <div className="flex justify-between items-center text-emerald-600 font-black uppercase text-xs tracking-widest pt-4 px-4">
                  <span>Amount Received</span>
                  <span className="font-mono text-xl">₹{printingBill.paidAmount.toLocaleString()}</span>
               </div>
-              <div className="flex justify-between items-center text-rose-600 font-black uppercase text-xs tracking-widest px-4">
-                 <span>Balance Pending</span>
+              <div className={`flex justify-between items-center font-black uppercase text-xs tracking-widest px-4 pb-4 ${printingBill.finalAmount - printingBill.paidAmount > 0 ? 'text-rose-600' : 'text-slate-400'}`}>
+                 <span>Balance Outstanding</span>
                  <span className="font-mono text-xl">₹{(printingBill.finalAmount - printingBill.paidAmount).toLocaleString()}</span>
               </div>
            </div>
         </div>
-        <p className="text-center text-[10px] text-slate-300 font-black uppercase tracking-[0.4em] mt-16 italic">E-Billing Solution By Doon Valley High School</p>
+        <p className="text-center text-[10px] text-slate-300 font-black uppercase tracking-[0.4em] mt-16 italic">Thank you for your cooperation | Doon Valley High School</p>
       </div>
     );
   }
@@ -257,55 +258,55 @@ const SalesBilling: React.FC<{ store: any }> = ({ store }) => {
           <p className="text-slate-500">Inventory disbursement logs and collection tracking</p>
         </div>
         <button 
-          onClick={() => { handleCloseModal(); setShowModal(true); handleAddNewItemRow(); }}
+          onClick={() => { setEditingBill(null); handleCloseModal(); setShowModal(true); handleAddNewItemRow(); }}
           className="bg-emerald-600 hover:bg-emerald-700 text-white px-6 py-2.5 rounded-xl flex items-center justify-center space-x-2 shadow-lg shadow-emerald-500/20 transition-all transform hover:scale-105"
         >
           <Plus size={20} />
-          <span className="font-bold">New Sale / Issue</span>
+          <span className="font-bold">New Sales / Issue Bill</span>
         </button>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        <div className="bg-white p-6 rounded-3xl border border-slate-200 shadow-sm flex items-center space-x-4">
+        <div className="bg-white p-6 rounded-3xl border border-slate-200 shadow-sm flex items-center space-x-4 hover:border-blue-200 transition-colors">
           <div className="p-4 bg-blue-100 text-blue-600 rounded-2xl">
             <TrendingUp size={24} />
           </div>
           <div>
-            <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Gross Invoiced</p>
-            <h3 className="text-2xl font-black text-slate-900">₹{totalInvoicedSum.toLocaleString()}</h3>
+            <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Invoiced Value</p>
+            <h3 className="text-2xl font-black text-slate-900">₹{store.salesBills.reduce((s: any, b: any) => s + b.finalAmount, 0).toLocaleString()}</h3>
           </div>
         </div>
-        <div className="bg-white p-6 rounded-3xl border border-slate-200 shadow-sm flex items-center space-x-4">
+        <div className="bg-white p-6 rounded-3xl border border-slate-200 shadow-sm flex items-center space-x-4 hover:border-emerald-200 transition-colors">
           <div className="p-4 bg-emerald-100 text-emerald-600 rounded-2xl">
             <HandCoins size={24} />
           </div>
           <div>
-            <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Received Total</p>
-            <h3 className="text-2xl font-black text-emerald-600">₹{totalReceivedSum.toLocaleString()}</h3>
+            <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Total Collection</p>
+            <h3 className="text-2xl font-black text-emerald-600">₹{store.salesBills.reduce((s: any, b: any) => s + b.paidAmount, 0).toLocaleString()}</h3>
           </div>
         </div>
-        <div className="bg-white p-6 rounded-3xl border border-slate-200 shadow-sm flex items-center space-x-4">
+        <div className="bg-white p-6 rounded-3xl border border-slate-200 shadow-sm flex items-center space-x-4 hover:border-rose-200 transition-colors">
           <div className="p-4 bg-rose-100 text-rose-600 rounded-2xl">
             <Wallet size={24} />
           </div>
           <div>
-            <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Pending Dues</p>
-            <h3 className="text-2xl font-black text-rose-600">₹{totalBalanceSum.toLocaleString()}</h3>
+            <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Total Outstanding</p>
+            <h3 className="text-2xl font-black text-rose-600">₹{store.salesBills.reduce((s: any, b: any) => s + (b.finalAmount - b.paidAmount), 0).toLocaleString()}</h3>
           </div>
         </div>
       </div>
 
-      <div className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
+      <div className="bg-white rounded-3xl border border-slate-200 shadow-sm overflow-hidden">
         <div className="overflow-x-auto">
           <table className="w-full text-left">
             <thead>
               <tr className="bg-slate-50 text-slate-500 text-[11px] uppercase font-black tracking-widest">
-                <th className="px-6 py-4">Invoice No</th>
-                <th className="px-6 py-4">Date</th>
-                <th className="px-6 py-4">Issued To</th>
-                <th className="px-6 py-4 text-right">Amt / Balance</th>
-                <th className="px-6 py-4">Status</th>
-                <th className="px-6 py-4 text-right">Actions</th>
+                <th className="px-6 py-5">Invoice</th>
+                <th className="px-6 py-5">Date</th>
+                <th className="px-6 py-5">Recipient</th>
+                <th className="px-6 py-5 text-right">Net Total / Balance</th>
+                <th className="px-6 py-5">Status</th>
+                <th className="px-6 py-5 text-right">Actions</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100">
@@ -341,11 +342,6 @@ const SalesBilling: React.FC<{ store: any }> = ({ store }) => {
                   </td>
                 </tr>
               ))}
-              {store.salesBills.length === 0 && (
-                <tr>
-                  <td colSpan={6} className="px-6 py-24 text-center text-slate-400 italic font-medium">No sales records found.</td>
-                </tr>
-              )}
             </tbody>
           </table>
         </div>
@@ -359,7 +355,7 @@ const SalesBilling: React.FC<{ store: any }> = ({ store }) => {
                  <div className="p-3 bg-emerald-600 text-white rounded-[20px] shadow-lg shadow-emerald-200"><ShoppingCart size={28}/></div>
                  <div>
                     <h3 className="text-2xl font-black text-slate-900 leading-none">{editingBill ? 'Edit Transaction' : 'Record New Sale'}</h3>
-                    <p className="text-[10px] font-black uppercase text-emerald-600 tracking-widest mt-1.5">Reactive Calculation & Autocomplete Search</p>
+                    <p className="text-[10px] font-black uppercase text-emerald-600 tracking-widest mt-1.5">Real-time Financial Calculation</p>
                  </div>
               </div>
               <button onClick={handleCloseModal} className="text-slate-400 hover:text-slate-600 p-3 hover:bg-slate-200 rounded-full transition-all"><X size={32} /></button>
@@ -397,14 +393,14 @@ const SalesBilling: React.FC<{ store: any }> = ({ store }) => {
 
               <div className="space-y-6">
                 <div className="flex items-center justify-between border-b-4 border-slate-50 pb-4">
-                   <h4 className="text-xs font-black text-slate-400 uppercase tracking-[0.2em]">Inventory Cart Items</h4>
-                   <button type="button" onClick={handleAddNewItemRow} className="text-[10px] font-black text-emerald-600 bg-emerald-50 px-5 py-2.5 rounded-2xl border-2 border-emerald-100 flex items-center hover:bg-emerald-100 transition-all shadow-sm"><Plus size={16} className="mr-2"/> Add Another Item</button>
+                   <h4 className="text-xs font-black text-slate-400 uppercase tracking-[0.2em]">Inventory Items</h4>
+                   <button type="button" onClick={handleAddNewItemRow} className="text-[10px] font-black text-emerald-600 bg-emerald-50 px-5 py-2.5 rounded-2xl border-2 border-emerald-100 flex items-center hover:bg-emerald-100 transition-all shadow-sm"><Plus size={16} className="mr-2"/> Add Row</button>
                 </div>
                 <div className="space-y-5">
                   {items.map((it, idx) => (
                     <div key={idx} className="grid grid-cols-12 gap-5 items-end bg-slate-50/50 p-8 rounded-[40px] border-2 border-slate-100 transition-all hover:border-emerald-200 hover:bg-white shadow-sm group">
                       <div className="col-span-12 md:col-span-5 space-y-2 relative" ref={activeItemDropdown === idx ? dropdownRef : null}>
-                         <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest px-2">Search Catalog Item *</label>
+                         <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest px-2">Select Item *</label>
                          <div className="relative">
                             <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" size={18} />
                             <input 
@@ -448,12 +444,6 @@ const SalesBilling: React.FC<{ store: any }> = ({ store }) => {
                                    </button>
                                  ))
                                 }
-                                {store.items.filter((i: any) => 
-                                   i.name.toLowerCase().includes((itemSearch[idx] || '').toLowerCase()) || 
-                                   i.code.toLowerCase().includes((itemSearch[idx] || '').toLowerCase())
-                                 ).length === 0 && (
-                                  <div className="p-6 text-center text-slate-400 text-xs italic">No matching products...</div>
-                                )}
                               </div>
                             )}
                          </div>
@@ -463,7 +453,7 @@ const SalesBilling: React.FC<{ store: any }> = ({ store }) => {
                          <input type="number" required min="1" value={it.quantity} onChange={(e) => handleUpdateItemField(idx, 'quantity', e.target.value)} className="w-full px-4 py-3.5 border-2 border-slate-100 rounded-2xl text-lg font-black text-center outline-none focus:ring-8 focus:ring-emerald-50" />
                       </div>
                       <div className="col-span-4 md:col-span-2 space-y-2">
-                         <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest px-2">Sale Price (₹)</label>
+                         <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest px-2">Unit Rate (₹)</label>
                          <input type="number" required min="0" value={it.rate} onChange={(e) => handleUpdateItemField(idx, 'rate', e.target.value)} className="w-full px-4 py-3.5 border-2 border-slate-100 rounded-2xl text-lg font-black text-emerald-700 outline-none focus:ring-8 focus:ring-emerald-50" />
                       </div>
                       <div className="col-span-3 md:col-span-2 space-y-2">
@@ -478,6 +468,7 @@ const SalesBilling: React.FC<{ store: any }> = ({ store }) => {
                 </div>
               </div>
 
+              {/* REAL-TIME CALCULATION FOOTER SECTION */}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-12 pt-12 border-t-8 border-slate-50">
                  <div className="space-y-10">
                     <div className="bg-slate-50 p-10 rounded-[48px] border-4 border-white space-y-10 shadow-2xl">
@@ -494,7 +485,7 @@ const SalesBilling: React.FC<{ store: any }> = ({ store }) => {
                                className="w-full px-5 py-4 border-2 border-slate-200 rounded-[24px] bg-white text-sm font-black outline-none shadow-sm focus:ring-8 focus:ring-emerald-50"
                             >
                               <option value="Cash">Cash Handover</option>
-                              <option value="UPI">UPI / GPay / PhonePe</option>
+                              <option value="UPI">UPI / Digital App</option>
                               <option value="Bank">Direct Bank NEFT</option>
                             </select>
                           </div>
@@ -504,17 +495,10 @@ const SalesBilling: React.FC<{ store: any }> = ({ store }) => {
                           </div>
                        </div>
                        
-                       {paymentMode === 'Bank' && (
-                         <input name="bankName" defaultValue={editingBill?.bankName} placeholder="Target Bank Detail..." className="w-full px-6 py-4 border-2 border-slate-200 rounded-2xl bg-white text-sm font-black outline-none animate-in slide-in-from-top-2" />
-                       )}
-                       {paymentMode === 'UPI' && (
-                         <input name="upiId" defaultValue={editingBill?.upiId} placeholder="UPI Reference Number..." className="w-full px-6 py-4 border-2 border-slate-200 rounded-2xl bg-white text-sm font-black outline-none animate-in slide-in-from-top-2" />
-                       )}
-
                        <div className="space-y-3 pt-4 border-t border-slate-200">
                          <div className="flex justify-between items-center px-1">
-                            <label className="text-xs font-black text-emerald-700 uppercase tracking-widest">Amount Received Now (₹) *</label>
-                            <span className="text-[9px] font-black text-slate-400 uppercase">Updating realtime</span>
+                            <label className="text-xs font-black text-emerald-700 uppercase tracking-widest">Amount Received (₹) *</label>
+                            <span className="text-[9px] font-black text-slate-400 uppercase">Updates Balance</span>
                          </div>
                          <div className="relative group">
                             <IndianRupee size={32} className="absolute left-6 top-1/2 -translate-y-1/2 text-emerald-400 group-focus-within:text-emerald-600 transition-colors" />
@@ -529,25 +513,25 @@ const SalesBilling: React.FC<{ store: any }> = ({ store }) => {
                     </div>
                     <div className="space-y-3 px-4">
                       <label className="text-[10px] font-black text-slate-500 uppercase tracking-[0.2em] block">Office Billing Memo</label>
-                      <textarea name="remarks" defaultValue={editingBill?.remarks} rows={3} className="w-full px-8 py-6 border-4 border-slate-50 rounded-[32px] outline-none focus:border-emerald-100 focus:bg-slate-50 transition-all text-sm font-medium" placeholder="Distribution purpose, student ID, etc..." />
+                      <textarea name="remarks" defaultValue={editingBill?.remarks} rows={3} className="w-full px-8 py-6 border-4 border-slate-50 rounded-[32px] outline-none focus:border-emerald-100 focus:bg-slate-50 transition-all text-sm font-medium" placeholder="Purpose, student details, etc..." />
                     </div>
                  </div>
 
-                 <div className="bg-slate-900 text-white p-12 rounded-[64px] flex flex-col justify-between shadow-[0_32px_64px_-16px_rgba(0,0,0,0.3)] relative overflow-hidden group border-[12px] border-slate-800/50">
+                 <div className="bg-slate-900 text-white p-12 rounded-[64px] flex flex-col justify-between shadow-2xl relative overflow-hidden group border-[12px] border-slate-800/50">
                     <div className="absolute top-0 right-0 p-8 opacity-5 group-hover:scale-110 transition-transform duration-1000">
                        <FileText size={220} />
                     </div>
                     <div className="space-y-10 relative z-10">
-                       <div className="flex justify-between items-center text-slate-400 group">
+                       <div className="flex justify-between items-center text-slate-400">
                           <span className="text-xs font-black uppercase tracking-[0.2em] flex items-center">
-                             <Package size={18} className="mr-3 text-slate-500 group-hover:text-blue-400 transition-colors"/> Gross Total
+                             <Package size={18} className="mr-3 text-slate-500 transition-colors"/> Gross Cart Total
                           </span>
                           <span className="font-mono text-2xl">₹{totalBillRaw.toLocaleString()}</span>
                        </div>
                        
                        <div className="flex justify-between items-center text-rose-300">
                           <span className="flex items-center text-xs font-black uppercase tracking-[0.2em]">
-                             <Tag size={20} className="mr-3 text-rose-400"/> Discount (₹)
+                             <Tag size={20} className="mr-3 text-rose-400"/> Less: Discount (₹)
                           </span>
                           <div className="relative">
                              <input 
@@ -565,7 +549,6 @@ const SalesBilling: React.FC<{ store: any }> = ({ store }) => {
                           <span className="text-[11px] font-black text-emerald-400 uppercase tracking-[0.3em] block text-center bg-emerald-400/10 py-1.5 rounded-full border border-emerald-400/20">Final Amount Payable</span>
                           <div className="flex flex-col items-center justify-center">
                              <span className="text-8xl font-black font-mono tracking-tighter text-white drop-shadow-[0_4px_8px_rgba(0,0,0,0.5)]">₹{finalBillAmount.toLocaleString()}</span>
-                             <div className="text-[10px] text-slate-500 font-bold uppercase mt-3 tracking-[0.2em]">Authorized Institutional Rate</div>
                           </div>
                        </div>
 
@@ -575,15 +558,10 @@ const SalesBilling: React.FC<{ store: any }> = ({ store }) => {
                              <span className="font-black font-mono text-2xl">₹{Number(paidAmount).toLocaleString()}</span>
                           </div>
                           <div className={`flex justify-between items-center p-6 rounded-[32px] shadow-2xl transition-colors duration-500 ${currentBalanceDue > 0 ? 'bg-rose-600/20 text-rose-400 border-2 border-rose-500/20' : 'bg-emerald-600/20 text-emerald-400 border-2 border-emerald-500/20'}`}>
-                             <span className="text-sm font-black uppercase tracking-[0.2em]">Balance Due</span>
+                             <span className="text-sm font-black uppercase tracking-[0.2em]">Balance Pending</span>
                              <span className="font-black font-mono text-4xl">₹{currentBalanceDue.toLocaleString()}</span>
                           </div>
                        </div>
-                    </div>
-                    
-                    <div className="mt-12 bg-white/5 p-5 rounded-3xl flex items-start space-x-4 text-[10px] font-bold text-slate-400 uppercase leading-relaxed backdrop-blur-md border border-white/5">
-                       <AlertCircle size={20} className="text-blue-500 shrink-0" />
-                       <p>Note: Sale completion will deduct stock quantities instantly. This action is permanently audited under institutional compliance.</p>
                     </div>
                  </div>
               </div>
@@ -592,7 +570,7 @@ const SalesBilling: React.FC<{ store: any }> = ({ store }) => {
                 <button type="button" onClick={handleCloseModal} className="px-12 py-5 text-slate-500 font-black uppercase tracking-[0.2em] hover:bg-slate-100 rounded-[32px] transition-all border-2 border-transparent hover:border-slate-200 active:scale-95">Cancel</button>
                 <button type="submit" className="px-20 py-5 bg-emerald-600 text-white font-black uppercase tracking-[0.2em] rounded-[32px] hover:bg-emerald-700 transition-all shadow-[0_20px_40px_-10px_rgba(16,185,129,0.4)] flex items-center space-x-4 active:scale-95 group">
                   <CheckCircle size={28} className="group-hover:rotate-12 transition-transform"/>
-                  <span>{editingBill ? 'Apply Updates' : 'Generate & Close'}</span>
+                  <span>{editingBill ? 'Apply Updates' : 'Generate & Save Bill'}</span>
                 </button>
               </div>
             </form>
